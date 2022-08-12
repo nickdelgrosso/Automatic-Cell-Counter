@@ -14,17 +14,18 @@ class CellCounterImageProcessor(ImageProcessor):
     def imread(self, path: str) -> NDArray:
         return imread(path)
 
-    def label_image(self, img: NDArray) -> NDArray:
-        return label(apply_opening(binary_img=get_binary_map(img)))
+    def get_regions(self, img: NDArray) -> List[Region]:
+        labeled_image = label(apply_opening(binary_img=get_binary_map(img)))
+        cell_number = len(np.unique(labeled_image)) - 1
 
-    def find_median_cell_size(self, labeled_img: NDArray) -> float:
-        return find_median_cell_size(labeled_img=labeled_img)
+        # only apply watershed when the detected cell number is larger than 150
+        if cell_number > 150:
+            median_size = find_median_cell_size(labeled_img=labeled_image)
+            labeled_image = apply_watershed(labeled_img=labeled_image, median_size=median_size)
 
-    def apply_watershed(self, labeled_img: NDArray, median_size: float) -> NDArray:
-        return apply_watershed(labeled_img=labeled_img, median_size=median_size)
+        regions_skimage = regionprops(labeled_image)
+        regions = [Region(centroid=r.centroid, area=r.area, bbox=r.bbox) for r in regions_skimage]
+        return regions
 
-    def get_regions(self, bin_img: NDArray) -> List[Region]:
-        return regionprops(bin_img)
-
-    def count_regions(self, labeled_image: NDArray) -> int:
-        return len(np.unique(labeled_image)) - 1
+    def get_median_cell_size(self, regions: List[Region]) -> float:
+        return float(np.median([region.area for region in regions]))

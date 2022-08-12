@@ -7,8 +7,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-
-class Region(Protocol):
+class Region(NamedTuple):
     centroid: Tuple[float, float]
     area: int
     bbox: Tuple[int, int, int, int]
@@ -16,11 +15,8 @@ class Region(Protocol):
 
 class ImageProcessor(Protocol):
     def imread(self, path: str) -> NDArray: ...
-    def label_image(self, img: NDArray) -> NDArray: ...
-    def find_median_cell_size(self, labeled_img: NDArray) -> float: ...
-    def apply_watershed(self, labeled_img: NDArray, median_size: float) -> NDArray: ...
-    def get_regions(self, bin_img: NDArray) -> List[Region]: ...
-    def count_regions(self, labeled_image: NDArray) -> int: ...
+    def get_regions(self, img: NDArray) -> List[Region]: ...
+    def get_median_cell_size(self, regions: List[Region]) -> float: ...
 
 
 class LabelingResult(NamedTuple):
@@ -46,22 +42,13 @@ class CountCellsWorkflow:
     viewer: ImageViewer
 
     def __call__(self, image_path: str, export_filename: str = 'result.xlsx') -> None:
-        results: List[LabelingResult] = []
-
+        results = []
         for image_filename in self.repo.get_list_of_files(image_path):
             img = self.image_processor.imread(image_filename)
-            labeled_image = self.image_processor.label_image(img)
-            median_size = self.image_processor.find_median_cell_size(labeled_image)
-            cell_number = self.image_processor.count_regions(labeled_image=labeled_image)
-
-            # only apply watershed when the detected cell number is larger than 150
-            if cell_number > 150:
-                labeled_image = self.image_processor.apply_watershed(labeled_image, median_size)
-
-            regions = self.image_processor.get_regions(labeled_image)
+            regions = self.image_processor.get_regions(img)
             automatic_cell_count = len(regions)
             print('Number of cells detected with automatic method:', automatic_cell_count)
-
+            median_size = self.image_processor.get_median_cell_size(regions=regions)
             corrected_cell_count = self.viewer.evaluate_labels(img=img, median_size=median_size, regions=regions)
             result = LabelingResult(
                 name=image_filename,
