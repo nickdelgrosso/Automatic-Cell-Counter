@@ -1,20 +1,19 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 import napari
 import numpy as np
-from numpy.typing import NDArray
 
-from cell_counter.workflows.count_cells import Region, LabelingResult, ImageViewer
+from cell_counter.workflows.count_cells import ImageViewer
+from cell_counter.workflows.models import LabeledImage, LabelingResult
 
 
 class NapariImageViewer(ImageViewer):
-    def evaluate_labels(self, img: NDArray, median_size: float, regions: List[Region]) -> int:
-        points_array = np.array([region.centroid for region in regions])
+    def evaluate_labels(self, labeled_image: LabeledImage) -> LabelingResult:
+        points_array = np.array([region.centroid for region in labeled_image.regions])
         colors = []
         bboxes = []
-        for region in regions:
+        for region in labeled_image.regions:
+            median_size = labeled_image.median_cell_size
             if region.area >= 2 * median_size:
                 # bound
                 minr, minc, maxr, maxc = region.bbox
@@ -32,7 +31,7 @@ class NapariImageViewer(ImageViewer):
         bboxes_array = np.array(bboxes)
 
         # with napari.gui_qt():
-        viewer = napari.view_image(img, name='image')
+        viewer = napari.view_image(labeled_image.image_data, name='image')  # type: ignore
         if len(bboxes_array) > 0:
             viewer.add_shapes(
                 bboxes_array,
@@ -50,7 +49,7 @@ class NapariImageViewer(ImageViewer):
                 name='points',
             )
 
-        corrected_cell_num: int = len(regions)
+        corrected_cell_num: int = labeled_image.num_regions
         @viewer.bind_key('d')  # denote done
         def update_cell_numbers(viewer):
             num_cells = viewer.layers['points'].data.shape[0]
@@ -60,4 +59,10 @@ class NapariImageViewer(ImageViewer):
             viewer.close()
 
         napari.run()
-        return corrected_cell_num
+
+        result = LabelingResult(
+            name=labeled_image.image_filename,
+            automatic_cell_number=labeled_image.num_regions,
+            corrected_cell_number=corrected_cell_num,
+        )
+        return result
