@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from adapters.image_processor import CellCounterImageProcessor
-from adapters.image_repo import OSImageRepo
-from adapters.viewer import NapariImageViewer
-from use_cases.count_cells import CountCellsProgram
+from cell_counter.image_processors.image_processor import CellCounterImageProcessor
+from cell_counter.io.image_repo import OSImageRepo
+from cell_counter.viewers.napari_viewer import NapariImageViewer
+from cell_counter.use_cases.count_cells import CountCellsProgram
 
 import argparse
 

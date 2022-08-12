@@ -6,7 +6,7 @@ import napari
 import numpy as np
 from numpy.typing import NDArray
 
-from use_cases.count_cells import Region, LabelingResult, ImageViewer
+from cell_counter.use_cases.count_cells import Region, LabelingResult, ImageViewer
 
 
 class NapariImageViewer(ImageViewer):

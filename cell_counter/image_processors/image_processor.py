@@ -10,7 +10,7 @@ from skimage.measure import label, regionprops
 from skimage.morphology import disk, opening, remove_small_objects
 from skimage.segmentation import watershed
 
-from use_cases.count_cells import ImageProcessor, Region
+from cell_counter.use_cases.count_cells import ImageProcessor, Region
 
 def get_binary_map(img):
     '''

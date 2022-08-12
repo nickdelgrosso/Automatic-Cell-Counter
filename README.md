@@ -25,14 +25,14 @@ To run the cell counter, the user can easily input the following code in the ter
 * -image: The path of the input image or the path of the directory.
 
 ```
-python viewer.py --image example_data/8.tif
+python main.py --image example_data/8.tif
 ```
 or
 ```
-python viewer.py --image example_data/
+python main.py --image example_data/
 ```
 
-**Here is a tutorial to set up your Automatic Cell Counter for Windows**: [Tutorial](https://github.com/HelmholtzAI-Consultants-Munich/Automatic-Cell-Counter/blob/master/Python%20tutorial%20for%20Windows.pdf)
+**Here is a tutorial to set up your Automatic Cell Counter for Windows**: [Tutorial](Python%20tutorial%20for%20Windows.pdf)
 
 **Example output**:
 
@@ -41,7 +41,7 @@ The user interface will be built based on every input image for manual correctio
 After manual correction, **press the 'd' (denotes Done) key on the keyboard to print the updated cell numbers on the terminal and close the current window.** When all images are corrected, an excel file named **result** will be generated which contains both automatically detected cell numbers and corrected cell numbers.
 
 User interface for manual correction:
-![image](https://github.com/HelmholtzAI-Consultants-Munich/Automatic-Cell-Counter/blob/master/images/example_result.png)
+![image](docs/images/example_result.png)
 
 Example output on the terminal (left) and in the excel (right):
 <p float="left">
@@ -58,11 +58,11 @@ The target images for this reporsitory are taken from Boyden Chamber assay under
 The parameters of this algorithm are determined for image with size of 1550 * 2088. If your images are much smaller or larger than this size, please adjust the parameters.
 
 ### Example images:
-![image](https://github.com/HelmholtzAI-Consultants-Munich/Automatic-Cell-Counter/blob/master/images/example_images.png)
+![image](docs/images/example_images.png)
 
 ## Methods:
 
-![image](https://github.com/HelmholtzAI-Consultants-Munich/Automatic-Cell-Counter/blob/master/images/methods.png)
+![image](docs/images/methods.png)
 
 
 ## How to cite:
