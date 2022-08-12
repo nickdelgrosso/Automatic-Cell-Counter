@@ -11,13 +11,6 @@ from skimage.measure import regionprops,label
 from CellCounter import get_binary_map,apply_opening,find_median_cell_size,apply_watershed
 
 
-def get_args() -> CountCellArgs:
-    parser = argparse.ArgumentParser(description='Automatic cell counter')
-    parser.add_argument('--image', default=False)
-    args = parser.parse_args()
-    cell_args = CountCellArgs(image=args.image)
-    return cell_args
-
 
 class CountCellArgs(NamedTuple):
     image: str
@@ -110,6 +103,5 @@ def count_cells(args: CountCellArgs):
     df.to_excel('result.xlsx')
     print('Done! All results are saved in result.xlsx!')
 
-if __name__ == '__main__':
-    args = get_args()
-    count_cells(args)
+
+
