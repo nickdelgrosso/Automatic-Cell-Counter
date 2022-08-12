@@ -14,15 +14,16 @@ class CellCounterImageProcessor(ImageProcessor):
     def imread(self, path: str) -> NDArray:
         return imread(path)
 
-    def get_regions(self, img: NDArray) -> List[Region]:
+    def get_regions(self, img: NDArray, watershed_threshold=150) -> List[Region]:
         labeled_image = label(apply_opening(binary_img=get_binary_map(img)))
-        cell_number = len(np.unique(labeled_image)) - 1
 
         # only apply watershed when the detected cell number is larger than 150
-        if cell_number > 150:
+        cell_number = len(np.unique(labeled_image)) - 1
+        if cell_number > watershed_threshold:
             median_size = find_median_cell_size(labeled_img=labeled_image)
             labeled_image = apply_watershed(labeled_img=labeled_image, median_size=median_size)
 
+        # Extract Region Info
         regions_skimage = regionprops(labeled_image)
         regions = [Region(centroid=r.centroid, area=r.area, bbox=r.bbox) for r in regions_skimage]
         return regions
