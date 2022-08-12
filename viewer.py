@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import os
+from typing import NamedTuple
 import napari
 import argparse
 import numpy as np
@@ -16,13 +19,19 @@ from CellCounter import get_binary_map,apply_opening,find_median_cell_size,apply
 #         return True
 #     raise ValueError(f'{value} is not a valid boolean value')
 
-def get_args():
+def get_args() -> CountCellArgs:
     parser = argparse.ArgumentParser(description='Automatic cell counter')
     parser.add_argument('--image', default=False)
-    return parser.parse_args()
+    args = parser.parse_args()
+    cell_args = CountCellArgs(image=args.image)
+    return cell_args
 
-if __name__ == '__main__':
-    args = get_args()
+
+class CountCellArgs(NamedTuple):
+    image: str
+
+
+def count_cells(args: CountCellArgs):
     
     if os.path.isdir(args.image):
         listOfFiles = list()
@@ -69,25 +78,25 @@ if __name__ == '__main__':
 
             points.append([y,x])
 
-        points=np.array(points)
+        points_array=np.array(points)
         point_properties={
             'point_colors': np.array(colors)
         }
-        bboxes = np.array(bboxes)
+        bboxes_array = np.array(bboxes)
         print('Image name: ',image)
-        print('Number of cells detected with automatic method: ', len(points))
-        result.append([image,len(points)])
+        print('Number of cells detected with automatic method: ', len(points_array))
+        result.append([image,len(points_array)])
 
         #with napari.gui_qt():
         viewer = napari.view_image(img, name='image')
-        if len(bboxes)>0:
-            shapes_layer = viewer.add_shapes(bboxes,
+        if len(bboxes_array)>0:
+            shapes_layer = viewer.add_shapes(bboxes_array,
                                     face_color='transparent',
                                     edge_color='magenta',
                                     name='bounding box',
                                     edge_width=5)
-        if len(points)>0:
-            points_layer = viewer.add_points(points,
+        if len(points_array)>0:
+            points_layer = viewer.add_points(points_array,
                                     properties=point_properties,
                                     face_color='point_colors',
                                     size=20,
@@ -108,3 +117,7 @@ if __name__ == '__main__':
     df = pd.DataFrame(result, columns =['Name', 'Automatic Cell Number','Corrected Cell Number']) 
     df.to_excel('result.xlsx')
     print('Done! All results are saved in result.xlsx!')
+
+if __name__ == '__main__':
+    args = get_args()
+    count_cells(args)
