@@ -1,22 +1,33 @@
 from __future__ import annotations
 
 import os
-from typing import NamedTuple
+from typing import NamedTuple, TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
 import napari
-import argparse
 import numpy as np
+
 import pandas as pd
 from skimage.io import imread
 from skimage.measure import regionprops,label
-from CellCounter import get_binary_map,apply_opening,find_median_cell_size,apply_watershed
-
 
 
 class CountCellArgs(NamedTuple):
     image: str
 
 
-def count_cells(args: CountCellArgs):
+class ImageProcessor(Protocol):
+    def get_binary_map(self, img: NDArray) -> NDArray: ...
+    def apply_opening(self, binary_img: NDArray) -> NDArray: ...
+    def find_median_cell_size(self, labeled_img: NDArray) -> float: ...
+    def apply_watershed(self, labeled_img: NDArray, median_size: float) -> NDArray: ...
+
+
+
+
+def count_cells(args: CountCellArgs, image_processor: ImageProcessor) -> None:
     
     if os.path.isdir(args.image):
         listOfFiles = list()
@@ -34,13 +45,13 @@ def count_cells(args: CountCellArgs):
     for image in listOfFiles:
         img = imread(image)  
 
-        binary_img = get_binary_map(img)
-        final = label(apply_opening(binary_img))
-        median_size = find_median_cell_size(final)
+        binary_img = image_processor.get_binary_map(img)
+        final = label(image_processor.apply_opening(binary_img))
+        median_size = image_processor.find_median_cell_size(final)
         cell_number = len(np.unique(final))-1
         # only apply watershed when the detected cell number is larger than 150
         if cell_number > 150: 
-            final = apply_watershed(final,median_size) 
+            final = image_processor.apply_watershed(final, median_size)
 
         # viewer
         points = [] 

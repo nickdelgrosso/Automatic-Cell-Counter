@@ -1,4 +1,6 @@
 import numpy as np
+from numpy.typing import NDArray
+
 from scipy import ndimage as ndi
 from skimage.filters import threshold_li
 from skimage.measure import label, regionprops
@@ -6,6 +8,9 @@ from skimage.color import label2rgb
 from skimage.morphology import disk, opening, remove_small_objects
 from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
+
+from viewer import ImageProcessor
+
 
 def get_binary_map(img):
     '''
@@ -21,20 +26,19 @@ def get_binary_map(img):
         binary_map: ndarray
             output binary map, where foreground denotes detected violet cells
     '''
-    r = img[:,:,0].astype(np.int32)
-    g = img[:,:,1].astype(np.int32)
-    b = img[:,:,2].astype(np.int32)
-    
+    r = img[:, :, 0].astype(np.int32)
+    g = img[:, :, 1].astype(np.int32)
+    b = img[:, :, 2].astype(np.int32)
+
     # subtract b from g channel
-    sub_rgb = (g-b)/(r+g+b)
+    sub_rgb = (g - b) / (r + g + b)
     thresh = threshold_li(sub_rgb)
     binary_map = sub_rgb < thresh
-    
+
     return binary_map
-    
-    
-    
-def apply_opening(binary_img,selem_parameter=7,remove_objects=1000):
+
+
+def apply_opening(binary_img, selem_parameter=7, remove_objects=1000):
     '''
     This function applies opening algorithm to the input binary map and remove small objects afterwards. Opening can remove small bright spots (i.e. “salt”) and connect small dark cracks. This tends to “open” up (dark) gaps between (bright) features.
     
@@ -54,10 +58,11 @@ def apply_opening(binary_img,selem_parameter=7,remove_objects=1000):
     
     '''
     selem = disk(selem_parameter)
-    opened_image = opening(binary_img,selem)
+    opened_image = opening(binary_img, selem)
     opened_image = remove_small_objects(opened_image.astype(bool), remove_objects).astype(np.int64)
-    
+
     return opened_image
+
 
 def find_median_cell_size(labeled_img):
     '''
@@ -78,8 +83,9 @@ def find_median_cell_size(labeled_img):
         area.append(region.area)
     median = np.median(np.array(area))
     return median
-    
-def apply_watershed(labeled_img,median_size,min_distance=40,remove_objects=1000):
+
+
+def apply_watershed(labeled_img, median_size, min_distance=40, remove_objects=1000):
     '''
     This function applies watershed algorithm on large-size regions (> 2*median size) to separate possible merged cells. 
     
@@ -101,21 +107,31 @@ def apply_watershed(labeled_img,median_size,min_distance=40,remove_objects=1000)
     '''
     # watershed algorithm
     distance = ndi.distance_transform_edt(labeled_img)
-    local_max_coords = peak_local_max(distance, min_distance=min_distance,exclude_border=0)
+    local_max_coords = peak_local_max(distance, min_distance=min_distance, exclude_border=0)
     local_max_mask = np.zeros(distance.shape, dtype=bool)
     local_max_mask[tuple(local_max_coords.T)] = True
     markers = label(local_max_mask)
-    labels = watershed(-distance, markers, mask=labeled_img,watershed_line=True)
+    labels = watershed(-distance, markers, mask=labeled_img, watershed_line=True)
 
     # only apply watershed on large size cells
-    large_cells = remove_small_objects(labeled_img.astype(bool), 2*median_size).astype(np.int64)
+    large_cells = remove_small_objects(labeled_img.astype(bool), 2 * median_size).astype(np.int64)
     final = labeled_img
-    final[large_cells>0] = labels[large_cells>0]
+    final[large_cells > 0] = labels[large_cells > 0]
     final = remove_small_objects(label(final), remove_objects).astype(np.int64)
 
     return final
-        
-        
-        
-    
-    
+
+
+class CellCounterImageProcessor(ImageProcessor):
+
+    def get_binary_map(self, img: NDArray) -> NDArray:
+        return get_binary_map(img=img)
+
+    def apply_opening(self, binary_img: NDArray) -> NDArray:
+        return apply_opening(binary_img=binary_img)
+
+    def find_median_cell_size(self, labeled_img: NDArray) -> float:
+        return find_median_cell_size(labeled_img=labeled_img)
+
+    def apply_watershed(self, labeled_img: NDArray, median_size: float) -> NDArray:
+        return apply_watershed(labeled_img=labeled_img, median_size=median_size)
