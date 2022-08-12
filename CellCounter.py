@@ -9,6 +9,7 @@ from skimage.morphology import disk, opening, remove_small_objects
 from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
 
+
 from viewer import ImageProcessor
 
 
@@ -124,11 +125,8 @@ def apply_watershed(labeled_img, median_size, min_distance=40, remove_objects=10
 
 class CellCounterImageProcessor(ImageProcessor):
 
-    def get_binary_map(self, img: NDArray) -> NDArray:
-        return get_binary_map(img=img)
-
-    def apply_opening(self, binary_img: NDArray) -> NDArray:
-        return apply_opening(binary_img=binary_img)
+    def label_image(self, img: NDArray) -> NDArray:
+        return label(apply_opening(binary_img=get_binary_map(img)))
 
     def find_median_cell_size(self, labeled_img: NDArray) -> float:
         return find_median_cell_size(labeled_img=labeled_img)

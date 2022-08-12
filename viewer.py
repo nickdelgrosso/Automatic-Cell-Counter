@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import os
-from typing import NamedTuple, TYPE_CHECKING, Protocol
+from typing import NamedTuple, TYPE_CHECKING, Protocol, List
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -18,35 +17,29 @@ class CountCellArgs(NamedTuple):
     image: str
 
 
+
 class ImageProcessor(Protocol):
-    def get_binary_map(self, img: NDArray) -> NDArray: ...
-    def apply_opening(self, binary_img: NDArray) -> NDArray: ...
+    def label_image(self, img: NDArray) -> NDArray: ...
     def find_median_cell_size(self, labeled_img: NDArray) -> float: ...
     def apply_watershed(self, labeled_img: NDArray, median_size: float) -> NDArray: ...
 
 
+class ImageRepo(Protocol):
+    def get_list_of_files(self, path: str) -> List[str]: ...
 
 
-def count_cells(args: CountCellArgs, image_processor: ImageProcessor) -> None:
-    
-    if os.path.isdir(args.image):
-        listOfFiles = list()
-        for (dirpath, dirnames, filenames) in os.walk(args.image):
-            filenames = [f for f in filenames if not f[0] == '.']
-            dirnames[:] = [d for d in dirnames if not d[0] == '.']
-            print(dirpath)
-            filenames.sort()#key=lambda x: int(x.split(".")[0]))
-            listOfFiles += [os.path.join(dirpath, file) for file in filenames]
-    else:
-        listOfFiles = [args.image]
+def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: ImageRepo) -> None:
+
+
+    path = args.image
+    listOfFiles = repo.get_list_of_files(path)
     
     result = []
     # image process
     for image in listOfFiles:
         img = imread(image)  
 
-        binary_img = image_processor.get_binary_map(img)
-        final = label(image_processor.apply_opening(binary_img))
+        final = image_processor.label_image(img)
         median_size = image_processor.find_median_cell_size(final)
         cell_number = len(np.unique(final))-1
         # only apply watershed when the detected cell number is larger than 150
@@ -113,6 +106,9 @@ def count_cells(args: CountCellArgs, image_processor: ImageProcessor) -> None:
     df = pd.DataFrame(result, columns =['Name', 'Automatic Cell Number','Corrected Cell Number']) 
     df.to_excel('result.xlsx')
     print('Done! All results are saved in result.xlsx!')
+
+
+
 
 
 
