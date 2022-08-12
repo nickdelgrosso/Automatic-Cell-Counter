@@ -1,3 +1,5 @@
+**Note: This fork is being used only as an refactoring experiment.  Please use the original project at https://github.com/HelmholtzAI-Consultants-Munich/Automatic-Cell-Counter**
+
 # Automatic Cell Counter
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6390980.svg)](https://doi.org/10.5281/zenodo.6390980)
