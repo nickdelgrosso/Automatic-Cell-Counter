@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 from typing import NamedTuple, TYPE_CHECKING, Protocol, List, Tuple, Optional
+from dataclasses import dataclass
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
-
-class CountCellArgs(NamedTuple):
-    image_path: str
-    export_filename: str = 'result.xlsx'
 
 
 class Region(Protocol):
@@ -41,24 +38,31 @@ class ImageViewer(Protocol):
     def evaluate_labels(self, filename: str, img: NDArray, median_size: float, regions: List[Region]) -> LabelingResult: ...
 
 
-def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: ImageRepo, viewer: ImageViewer) -> None:
-    results: List[LabelingResult] = []
 
-    for image in repo.get_list_of_files(args.image_path):
-        img = repo.imread(image)
-        labeled_image = image_processor.label_image(img)
-        median_size = image_processor.find_median_cell_size(labeled_image)
-        cell_number = image_processor.count_regions(labeled_image=labeled_image)
+@dataclass
+class CountCellsProgram:
+    image_processor: ImageProcessor
+    repo: ImageRepo
+    viewer: ImageViewer
 
-        # only apply watershed when the detected cell number is larger than 150
-        if cell_number > 150:
-            labeled_image = image_processor.apply_watershed(labeled_image, median_size)
+    def __call__(self, image_path: str, export_filename: str = 'result.xlsx') -> None:
+        results: List[LabelingResult] = []
 
-        regions = image_processor.get_regions(labeled_image)
-        result = viewer.evaluate_labels(filename=image, img=img, median_size=median_size, regions=regions)
-        results.append(result)
+        for image in self.repo.get_list_of_files(image_path):
+            img = self.repo.imread(image)
+            labeled_image = self.image_processor.label_image(img)
+            median_size = self.image_processor.find_median_cell_size(labeled_image)
+            cell_number = self.image_processor.count_regions(labeled_image=labeled_image)
 
-    repo.write_counts_to_excel(results, filename=args.export_filename)
-    print(f'Done! All results are saved in {args.export_filename}')
+            # only apply watershed when the detected cell number is larger than 150
+            if cell_number > 150:
+                labeled_image = self.image_processor.apply_watershed(labeled_image, median_size)
+
+            regions = self.image_processor.get_regions(labeled_image)
+            result = self.viewer.evaluate_labels(filename=image, img=img, median_size=median_size, regions=regions)
+            results.append(result)
+
+        self.repo.write_counts_to_excel(results, filename=export_filename)
+        print(f'Done! All results are saved in {export_filename}')
 
 
