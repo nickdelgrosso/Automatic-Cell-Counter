@@ -3,10 +3,14 @@ from __future__ import annotations
 import os
 from typing import List
 
+from numpy.typing import NDArray
+from skimage.io import imread
+
 from viewer import ImageRepo
 
 
 class OSImageRepo(ImageRepo):
+
     def get_list_of_files(self, path: str) -> List[str]:
         if os.path.isdir(path):
             listOfFiles = list()
@@ -19,3 +23,6 @@ class OSImageRepo(ImageRepo):
         else:
             listOfFiles = [path]
         return listOfFiles
+
+    def imread(self, path: str) -> NDArray:
+        return imread(path)

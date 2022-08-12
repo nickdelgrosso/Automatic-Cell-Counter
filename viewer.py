@@ -9,12 +9,10 @@ import napari
 import numpy as np
 
 import pandas as pd
-from skimage.io import imread
 
 
 class CountCellArgs(NamedTuple):
     image: str
-
 
 
 class Region(Protocol):
@@ -30,10 +28,9 @@ class ImageProcessor(Protocol):
     def get_region_properties(self, bin_img: NDArray) -> List[Region]: ...
 
 
-
 class ImageRepo(Protocol):
     def get_list_of_files(self, path: str) -> List[str]: ...
-
+    def imread(self, path: str) -> NDArray: ...
 
 
 def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: ImageRepo) -> None:
@@ -45,7 +42,8 @@ def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: Imag
     result = []
     # image process
     for image in listOfFiles:
-        img = imread(image)  
+
+        img = repo.imread(image)
 
         final = image_processor.label_image(img)
         median_size = image_processor.find_median_cell_size(final)
