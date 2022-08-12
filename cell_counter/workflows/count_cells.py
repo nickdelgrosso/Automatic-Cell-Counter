@@ -40,7 +40,7 @@ class ImageViewer(Protocol):
 
 
 @dataclass
-class CountCellsProgram:
+class CountCellsWorkflow:
     image_processor: ImageProcessor
     repo: ImageRepo
     viewer: ImageViewer
