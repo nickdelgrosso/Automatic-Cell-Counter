@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 class CountCellArgs(NamedTuple):
-    image: str
+    image_path: str
     export_filename: str = 'result.xlsx'
 
 
@@ -42,10 +42,9 @@ class ImageViewer(Protocol):
 
 
 def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: ImageRepo, viewer: ImageViewer) -> None:
-    path = args.image
     results: List[LabelingResult] = []
 
-    for image in repo.get_list_of_files(path):
+    for image in repo.get_list_of_files(args.image_path):
         img = repo.imread(image)
         labeled_image = image_processor.label_image(img)
         median_size = image_processor.find_median_cell_size(labeled_image)
