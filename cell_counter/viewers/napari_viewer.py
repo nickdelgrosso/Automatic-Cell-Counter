@@ -10,7 +10,7 @@ from cell_counter.workflows.count_cells import Region, LabelingResult, ImageView
 
 
 class NapariImageViewer(ImageViewer):
-    def evaluate_labels(self, filename: str, img: NDArray, median_size: float, regions: List[Region]) -> LabelingResult:
+    def evaluate_labels(self, img: NDArray, median_size: float, regions: List[Region]) -> int:
         points_array = np.array([region.centroid for region in regions])
         colors = []
         bboxes = []
@@ -30,24 +30,27 @@ class NapariImageViewer(ImageViewer):
             'point_colors': np.array(colors)
         }
         bboxes_array = np.array(bboxes)
-        print('Image name: ', filename)
-        print('Number of cells detected with automatic method: ', len(points_array))
+
         # with napari.gui_qt():
         viewer = napari.view_image(img, name='image')
         if len(bboxes_array) > 0:
-            shapes_layer = viewer.add_shapes(bboxes_array,
-                                             face_color='transparent',
-                                             edge_color='magenta',
-                                             name='bounding box',
-                                             edge_width=5)
+            viewer.add_shapes(
+                bboxes_array,
+                face_color='transparent',
+                edge_color='magenta',
+                name='bounding box',
+                edge_width=5,
+            )
         if len(points_array) > 0:
-            points_layer = viewer.add_points(points_array,
-                                             properties=point_properties,
-                                             face_color='point_colors',
-                                             size=20,
-                                             name='points')
-        corrected_cell_num: Optional[int] = None
+            viewer.add_points(
+                points_array,
+                properties=point_properties,
+                face_color='point_colors',
+                size=20,
+                name='points',
+            )
 
+        corrected_cell_num: int = len(regions)
         @viewer.bind_key('d')  # denote done
         def update_cell_numbers(viewer):
             num_cells = viewer.layers['points'].data.shape[0]
@@ -57,11 +60,4 @@ class NapariImageViewer(ImageViewer):
             viewer.close()
 
         napari.run()
-        result = LabelingResult(
-            name=filename,
-            automatic_cell_number=len(points_array),
-            corrected_cell_number=corrected_cell_num,
-        )
-        return result
-
-
+        return corrected_cell_num

@@ -35,7 +35,7 @@ class ImageRepo(Protocol):
 
 
 class ImageViewer(Protocol):
-    def evaluate_labels(self, filename: str, img: NDArray, median_size: float, regions: List[Region]) -> LabelingResult: ...
+    def evaluate_labels(self, img: NDArray, median_size: float, regions: List[Region]) -> int: ...
 
 
 
@@ -59,7 +59,15 @@ class CountCellsWorkflow:
                 labeled_image = self.image_processor.apply_watershed(labeled_image, median_size)
 
             regions = self.image_processor.get_regions(labeled_image)
-            result = self.viewer.evaluate_labels(filename=image_filename, img=img, median_size=median_size, regions=regions)
+            automatic_cell_count = len(regions)
+            print('Number of cells detected with automatic method:', automatic_cell_count)
+
+            corrected_cell_count = self.viewer.evaluate_labels(img=img, median_size=median_size, regions=regions)
+            result = LabelingResult(
+                name=image_filename,
+                automatic_cell_number=automatic_cell_count,
+                corrected_cell_number=corrected_cell_count,
+            )
             results.append(result)
 
         self.repo.write_counts_to_excel(results, filename=export_filename)
