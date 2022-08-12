@@ -3,13 +3,11 @@ from typing import List
 import numpy as np
 from numpy.typing import NDArray
 from scipy import ndimage as ndi
+from skimage.feature import peak_local_max
 from skimage.filters import threshold_li
 from skimage.measure import label, regionprops
-from skimage.color import label2rgb
 from skimage.morphology import disk, opening, remove_small_objects
 from skimage.segmentation import watershed
-from skimage.feature import peak_local_max
-
 
 from viewer import ImageProcessor, Region
 
@@ -17,12 +15,12 @@ from viewer import ImageProcessor, Region
 def get_binary_map(img):
     '''
     This function returns the binary map of crystal violet cells from the input RGB images.
-    
+
     Input
     ----------
         img: ndarray
             input image with RGB three channels
-    
+
     Returns
     -------
         binary_map: ndarray
@@ -43,7 +41,7 @@ def get_binary_map(img):
 def apply_opening(binary_img, selem_parameter=7, remove_objects=1000):
     '''
     This function applies opening algorithm to the input binary map and remove small objects afterwards. Opening can remove small bright spots (i.e. “salt”) and connect small dark cracks. This tends to “open” up (dark) gaps between (bright) features.
-    
+
     Input
     ----------
         binary_img: ndarray
@@ -52,12 +50,12 @@ def apply_opening(binary_img, selem_parameter=7, remove_objects=1000):
             parameter affects the neighborhood structure in opening algorithm
         remove_objects: int, default 1000
             the smallest allowable object size.
-    
+
     Returns
     -------
         opened_image: ndarray
             the binary image after opening algorithm and removing small objects
-    
+
     '''
     selem = disk(selem_parameter)
     opened_image = opening(binary_img, selem)
@@ -69,12 +67,12 @@ def apply_opening(binary_img, selem_parameter=7, remove_objects=1000):
 def find_median_cell_size(labeled_img):
     '''
     The function calculates the median region size given a instance labeled image.
-    
+
     Input
     ----------
         labeled_img: ndarray
-            input labeled image, where different values denote different region 
-    
+            input labeled image, where different values denote different region
+
     Returns
     -------
         mid: float
@@ -89,8 +87,8 @@ def find_median_cell_size(labeled_img):
 
 def apply_watershed(labeled_img, median_size, min_distance=40, remove_objects=1000):
     '''
-    This function applies watershed algorithm on large-size regions (> 2*median size) to separate possible merged cells. 
-    
+    This function applies watershed algorithm on large-size regions (> 2*median size) to separate possible merged cells.
+
     Input
     ----------
         labeled_img: ndarray
@@ -101,7 +99,7 @@ def apply_watershed(labeled_img, median_size, min_distance=40, remove_objects=10
             parameter in watershed algorithm, the minimal allowed distance separating peaks
         remove_objects: int, default 1000
             the smallest allowable object size.
-            
+
     Returns
     -------
         final: ndarray

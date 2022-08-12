@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import os
-from typing import List, Tuple, Optional
+from typing import List
 
+import pandas as pd
 from numpy.typing import NDArray
 from skimage.io import imread
-import pandas as pd
 
 from viewer import ImageRepo, LabelingResult
 
