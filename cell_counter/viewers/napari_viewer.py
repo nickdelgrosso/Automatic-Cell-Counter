@@ -24,13 +24,11 @@ class NapariImageViewer(ImageViewer):
 
         napari.run()
 
-        corrected_cell_num = points_layer.data.shape[0]
-        result = LabelingResult(
+        return LabelingResult(
             name=labeled_image.image_filename,
             automatic_cell_number=labeled_image.num_regions,
-            corrected_cell_number=corrected_cell_num,
+            corrected_cell_number=points_layer.data.shape[0],
         )
-        return result
 
     def _show_cell_centroids(self, labeled_image, viewer):
         color_map = {
