@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import os
-from typing import List
+from typing import List, Tuple, Optional
 
 from numpy.typing import NDArray
 from skimage.io import imread
+import pandas as pd
 
-from viewer import ImageRepo
+from viewer import ImageRepo, LabelingResult
 
 
 class OSImageRepo(ImageRepo):
@@ -26,3 +27,7 @@ class OSImageRepo(ImageRepo):
 
     def imread(self, path: str) -> NDArray:
         return imread(path)
+
+    def write_counts_to_excel(self, results: List[LabelingResult], filename: str) -> None:
+        df = pd.DataFrame(results, columns=['Name', 'Automatic Cell Number', 'Corrected Cell Number'])
+        df.to_excel(filename)

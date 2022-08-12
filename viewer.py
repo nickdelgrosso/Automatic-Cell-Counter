@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import NamedTuple, TYPE_CHECKING, Protocol, List, Tuple
+from typing import NamedTuple, TYPE_CHECKING, Protocol, List, Tuple, Optional
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 import napari
 import numpy as np
-
-import pandas as pd
 
 
 class CountCellArgs(NamedTuple):
@@ -28,9 +26,17 @@ class ImageProcessor(Protocol):
     def get_region_properties(self, bin_img: NDArray) -> List[Region]: ...
 
 
+class LabelingResult(NamedTuple):
+    name: str
+    automatic_cell_number: int
+    corrected_cell_number: Optional[int]
+
+
 class ImageRepo(Protocol):
     def get_list_of_files(self, path: str) -> List[str]: ...
     def imread(self, path: str) -> NDArray: ...
+    def write_counts_to_excel(self, results: List[LabelingResult], filename: str) -> None: ...
+
 
 
 def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: ImageRepo) -> None:
@@ -39,7 +45,7 @@ def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: Imag
     path = args.image
     listOfFiles = repo.get_list_of_files(path)
     
-    result = []
+    results: List[LabelingResult] = []
     # image process
     for image in listOfFiles:
 
@@ -80,7 +86,7 @@ def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: Imag
         bboxes_array = np.array(bboxes)
         print('Image name: ',image)
         print('Number of cells detected with automatic method: ', len(points_array))
-        result.append([image,len(points_array)])
+
 
         #with napari.gui_qt():
         viewer = napari.view_image(img, name='image')
@@ -97,21 +103,30 @@ def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: Imag
                                     size=20,
                                     name='points')
 
+        corrected_cell_num: Optional[int] = None
         @viewer.bind_key('d') # denote done
         def update_cell_numbers(viewer):
             num_cells = viewer.layers['points'].data.shape[0]
             print('Number of cells after manual correction: ', num_cells)
-            result[-1].append(num_cells)
+            nonlocal corrected_cell_num
+            corrected_cell_num = num_cells
             viewer.close()
         
         napari.run()
-    
-        if len(result[-1]) == 2:
-            result[-1].append(None)
-            
-    df = pd.DataFrame(result, columns =['Name', 'Automatic Cell Number','Corrected Cell Number']) 
-    df.to_excel('result.xlsx')
-    print('Done! All results are saved in result.xlsx!')
+
+        result = LabelingResult(
+            name=image,
+            automatic_cell_number=len(points_array),
+            corrected_cell_number=corrected_cell_num,
+        )
+        results.append(result)
+
+    export_filename = 'result.xlsx'
+    repo.write_counts_to_excel(results, filename=export_filename)
+    print(f'Done! All results are saved in {export_filename}')
+
+
+
 
 
 
