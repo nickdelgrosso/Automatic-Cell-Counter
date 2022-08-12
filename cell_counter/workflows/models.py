@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from statistics import median
-from typing import NamedTuple, Tuple, List, TYPE_CHECKING, Optional
+from typing import NamedTuple, Tuple, List, TYPE_CHECKING, Optional, Iterator
+from enum import Enum
+
 
 if TYPE_CHECKING:
     from numpy._typing import NDArray
@@ -18,6 +20,12 @@ class Image(NamedTuple):
     data: NDArray
 
 
+class CellSizeEvaluation(Enum):
+    SmallOutlier = 1
+    AverageSize = 2
+    LargeOutlier = 3
+
+
 class LabeledImage(NamedTuple):
     image: Image
     regions: List[Region]
@@ -29,6 +37,17 @@ class LabeledImage(NamedTuple):
     @property
     def median_cell_size(self) -> float:
         return float(median([region.area for region in self.regions]))
+
+    @property
+    def cell_size_evaluations(self) -> Iterator[CellSizeEvaluation]:
+        median_size = self.median_cell_size
+        for region in self.regions:
+            if region.area >= 2 * median_size:
+                yield CellSizeEvaluation.LargeOutlier
+            elif region.area < median_size / 2:
+                yield CellSizeEvaluation.SmallOutlier
+            else:
+                yield CellSizeEvaluation.AverageSize
 
     @property
     def image_data(self) -> NDArray:
