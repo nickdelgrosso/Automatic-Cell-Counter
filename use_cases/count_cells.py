@@ -15,6 +15,7 @@ class Region(Protocol):
 
 
 class ImageProcessor(Protocol):
+    def imread(self, path: str) -> NDArray: ...
     def label_image(self, img: NDArray) -> NDArray: ...
     def find_median_cell_size(self, labeled_img: NDArray) -> float: ...
     def apply_watershed(self, labeled_img: NDArray, median_size: float) -> NDArray: ...
@@ -30,7 +31,6 @@ class LabelingResult(NamedTuple):
 
 class ImageRepo(Protocol):
     def get_list_of_files(self, path: str) -> List[str]: ...
-    def imread(self, path: str) -> NDArray: ...
     def write_counts_to_excel(self, results: List[LabelingResult], filename: str) -> None: ...
 
 
@@ -48,8 +48,8 @@ class CountCellsProgram:
     def __call__(self, image_path: str, export_filename: str = 'result.xlsx') -> None:
         results: List[LabelingResult] = []
 
-        for image in self.repo.get_list_of_files(image_path):
-            img = self.repo.imread(image)
+        for image_filename in self.repo.get_list_of_files(image_path):
+            img = self.image_processor.imread(image_filename)
             labeled_image = self.image_processor.label_image(img)
             median_size = self.image_processor.find_median_cell_size(labeled_image)
             cell_number = self.image_processor.count_regions(labeled_image=labeled_image)
@@ -59,7 +59,7 @@ class CountCellsProgram:
                 labeled_image = self.image_processor.apply_watershed(labeled_image, median_size)
 
             regions = self.image_processor.get_regions(labeled_image)
-            result = self.viewer.evaluate_labels(filename=image, img=img, median_size=median_size, regions=regions)
+            result = self.viewer.evaluate_labels(filename=image_filename, img=img, median_size=median_size, regions=regions)
             results.append(result)
 
         self.repo.write_counts_to_excel(results, filename=export_filename)

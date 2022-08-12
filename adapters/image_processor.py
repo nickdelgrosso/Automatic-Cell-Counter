@@ -3,14 +3,14 @@ from typing import List
 import numpy as np
 from numpy.typing import NDArray
 from scipy import ndimage as ndi
+from skimage.io import imread
 from skimage.feature import peak_local_max
 from skimage.filters import threshold_li
 from skimage.measure import label, regionprops
 from skimage.morphology import disk, opening, remove_small_objects
 from skimage.segmentation import watershed
 
-from viewer import ImageProcessor, Region
-
+from use_cases.count_cells import ImageProcessor, Region
 
 def get_binary_map(img):
     '''
@@ -120,6 +120,9 @@ def apply_watershed(labeled_img, median_size, min_distance=40, remove_objects=10
 
 
 class CellCounterImageProcessor(ImageProcessor):
+
+    def imread(self, path: str) -> NDArray:
+        return imread(path)
 
     def label_image(self, img: NDArray) -> NDArray:
         return label(apply_opening(binary_img=get_binary_map(img)))

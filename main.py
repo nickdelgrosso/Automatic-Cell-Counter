@@ -3,7 +3,7 @@ from __future__ import annotations
 from adapters.image_processor import CellCounterImageProcessor
 from adapters.image_repo import OSImageRepo
 from adapters.viewer import NapariImageViewer
-from viewer import CountCellsProgram
+from use_cases.count_cells import CountCellsProgram
 
 import argparse
 
