@@ -38,6 +38,10 @@ class LabeledImage(NamedTuple):
     def image_filename(self) -> str:
         return self.image.filename
 
+    @property
+    def region_centroids(self) -> List[Tuple[float, float]]:
+        return [region.centroid for region in self.regions]
+
 
 class LabelingResult(NamedTuple):
     name: str
