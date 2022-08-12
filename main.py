@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from cli import get_args
 from viewer import count_cells
-from CellCounter import CellCounterImageProcessor
-from image_repo import OSImageRepo
+from adapters.image_processor import CellCounterImageProcessor
+from adapters.image_repo import OSImageRepo
 
 
 def main() -> None:
