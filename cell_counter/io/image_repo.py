@@ -6,7 +6,7 @@ from typing import List
 
 import pandas as pd
 
-from cell_counter.programs.count_cells import ImageRepo, LabelingResult
+from cell_counter.workflows.count_cells import ImageRepo, LabelingResult
 
 
 class OSImageRepo(ImageRepo):
