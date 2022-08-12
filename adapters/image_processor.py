@@ -78,11 +78,8 @@ def find_median_cell_size(labeled_img):
         mid: float
             the median region size
     '''
-    area = []
-    for region in regionprops(labeled_img):
-        area.append(region.area)
-    median = np.median(np.array(area))
-    return median
+    return np.median([region.area for region in regionprops(labeled_img)])
+
 
 
 def apply_watershed(labeled_img, median_size, min_distance=40, remove_objects=1000):
@@ -133,5 +130,8 @@ class CellCounterImageProcessor(ImageProcessor):
     def apply_watershed(self, labeled_img: NDArray, median_size: float) -> NDArray:
         return apply_watershed(labeled_img=labeled_img, median_size=median_size)
 
-    def get_region_properties(self, bin_img: NDArray) -> List[Region]:
+    def get_regions(self, bin_img: NDArray) -> List[Region]:
         return regionprops(bin_img)
+
+    def count_regions(self, labeled_image: NDArray) -> int:
+        return len(np.unique(labeled_image)) - 1
