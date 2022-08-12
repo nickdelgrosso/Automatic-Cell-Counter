@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, TYPE_CHECKING, Protocol, List
+from typing import NamedTuple, TYPE_CHECKING, Protocol, List, Tuple
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -10,7 +10,6 @@ import numpy as np
 
 import pandas as pd
 from skimage.io import imread
-from skimage.measure import regionprops,label
 
 
 class CountCellArgs(NamedTuple):
@@ -18,14 +17,23 @@ class CountCellArgs(NamedTuple):
 
 
 
+class Region(Protocol):
+    centroid: Tuple[float, float]
+    area: int
+    bbox: Tuple[int, int, int, int]
+
+
 class ImageProcessor(Protocol):
     def label_image(self, img: NDArray) -> NDArray: ...
     def find_median_cell_size(self, labeled_img: NDArray) -> float: ...
     def apply_watershed(self, labeled_img: NDArray, median_size: float) -> NDArray: ...
+    def get_region_properties(self, bin_img: NDArray) -> List[Region]: ...
+
 
 
 class ImageRepo(Protocol):
     def get_list_of_files(self, path: str) -> List[str]: ...
+
 
 
 def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: ImageRepo) -> None:
@@ -51,7 +59,7 @@ def count_cells(args: CountCellArgs, image_processor: ImageProcessor, repo: Imag
         colors = []
         bboxes = []
         i=0
-        for region in regionprops(final):
+        for region in image_processor.get_region_properties(final):
             y,x = region.centroid
             if region.area >= 2*median_size:       
                 #bound

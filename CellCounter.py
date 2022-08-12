@@ -1,6 +1,7 @@
+from typing import List
+
 import numpy as np
 from numpy.typing import NDArray
-
 from scipy import ndimage as ndi
 from skimage.filters import threshold_li
 from skimage.measure import label, regionprops
@@ -10,7 +11,7 @@ from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
 
 
-from viewer import ImageProcessor
+from viewer import ImageProcessor, Region
 
 
 def get_binary_map(img):
@@ -133,3 +134,6 @@ class CellCounterImageProcessor(ImageProcessor):
 
     def apply_watershed(self, labeled_img: NDArray, median_size: float) -> NDArray:
         return apply_watershed(labeled_img=labeled_img, median_size=median_size)
+
+    def get_region_properties(self, bin_img: NDArray) -> List[Region]:
+        return regionprops(bin_img)
