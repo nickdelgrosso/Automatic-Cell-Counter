@@ -6,7 +6,7 @@ from skimage.io import imread
 from skimage.measure import label, regionprops
 
 from cell_counter.image_processors.utils import get_binary_map, apply_opening, find_median_cell_size, apply_watershed
-from cell_counter.use_cases.count_cells import ImageProcessor, Region
+from cell_counter.programs.count_cells import ImageProcessor, Region
 
 
 class CellCounterImageProcessor(ImageProcessor):
